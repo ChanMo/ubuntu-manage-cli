@@ -15,13 +15,9 @@ with open('./config.yml', 'r') as f:
 
 config = yaml.load(text, Loader=yaml.FullLoader).get('default')
 
-# sudopass = Responder(
-#     pattern=r'\[sudo\] password for {}:'.format(config.get('user')),
-#     response='{}\n'.format(config.get('password'))
-# )
 sudopass = Responder(
-    pattern=r'\[sudo\] password for chen:',
-    response='orange0220\n'
+    pattern=r'\[sudo\] password for {}:'.format(config.get('user')),
+    response='{}\n'.format(config.get('password'))
 )
 
 
