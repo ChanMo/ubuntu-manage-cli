@@ -1,0 +1,46 @@
+* Linux Remote Manager Cli
+
+** Depends
+- fabric
+- click
+
+** Usage
+
+Download Code
+
+#+BEGIN_SRC bash
+  git clone https://github.com/ChanMo/ubuntu-manage-cli.git
+#+END_SRC
+
+Install Depends
+
+#+BEGIN_SRC bash
+  python3 -m pip install --user click fabric
+#+END_SRC
+
+Run Command
+
+#+BEGIN_SRC bash
+  python cli.py
+#+END_SRC
+
+** Command
+
+#+BEGIN_SRC
+  Usage: cli.py [OPTIONS] COMMAND [ARGS]...
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    aws-init         AWS服务器初始化
+    fast             初始化服务器
+    initvps          初始化服务器 v0.1.1 17:07:58 28/05/20
+    install-certbot  Install certbot by snap
+    install-docker   安装Docker
+    install-git      Install git
+    install-nginx
+    install-php      安装PHP, MYSQL等
+    install-snap     Install snap
+    set-ufw          Set ufw config
+#+END_SRC
