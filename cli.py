@@ -13,11 +13,15 @@ import click
 with open('./config.yml', 'r') as f:
     text = f.read()
 
-config = yaml.load(text).get('default')
+config = yaml.load(text, Loader=yaml.FullLoader).get('default')
 
+# sudopass = Responder(
+#     pattern=r'\[sudo\] password for {}:'.format(config.get('user')),
+#     response='{}\n'.format(config.get('password'))
+# )
 sudopass = Responder(
-    pattern=r'\[sudo\] password for {}:'.format(config.get('user')),
-    response='{}\n'.format(config.get('password'))
+    pattern=r'\[sudo\] password for chen:',
+    response='orange0220\n'
 )
 
 
@@ -30,7 +34,7 @@ def cli():
 @click.argument('user')
 @click.argument('password')
 @click.argument('ubuntu')
-def initvps(ip, user, password, ubuntu="20.04"):
+def initvps(ip, user, password, ubuntu="22.04"):
     """
     初始化服务器
     v0.1.1
@@ -80,10 +84,14 @@ def initvps(ip, user, password, ubuntu="20.04"):
         c.run('sudo apt-get install certbot python-certbot-nginx -y',
               pty=True, watchers=[sudopass])
 
-    elif ubuntu == '20.04':
-        c.run('sudo snap install --classic certbot -y', pty=True, watchers=[sudopass])
+    # elif ubuntu == '20.04':
+    else:
+        c.run('sudo apt-get install snapd -y', pty=True, watchers=[sudopass])
+        c.run('sudo snap install core', pty=True, watchers=[sudopass])
+        c.run('sudo snap refresh core', pty=True, watchers=[sudopass])
+
         c.run('sudo snap install --classic certbot', pty=True, watchers=[sudopass])
-        pass
+
 
     # docker
     # https://docs.docker.com/engine/install/ubuntu/
@@ -172,13 +180,34 @@ def install_docker(vps):
     c = Connection(vps)
     # docker
     # https://docs.docker.com/engine/install/ubuntu/
-    c.run('sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common', pty=True, watchers=[sudopass])
-    c.run('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -', pty=True, watchers=[sudopass])
-    c.run('sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"', pty=True, watchers=[sudopass])
+    # c.run('sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common', pty=True, watchers=[sudopass])
+    # c.run('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -', pty=True, watchers=[sudopass])
+    c.run('sudo mkdir -p /etc/apt/keyrings', pty=True, watchers=[sudopass])
+    c.run('curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg', pty=True, watchers=[sudopass])
+    c.run('echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null', pty=True, watchers=[sudopass])
+
     c.run('sudo apt-get update', pty=True, watchers=[sudopass])
-    c.run('sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose', pty=True, watchers=[sudopass])
+    # c.run('sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose', pty=True, watchers=[sudopass])
+    c.run('sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin', pty=True, watchers=[sudopass])
     c.run('sudo usermod -aG docker chen', pty=True, watchers=[sudopass])
 
+@cli.command()
+@click.argument('vps')
+def install_nginx(vps):
+    """
+    """
+    c = Connection(vps)
+    # c.run('sudo apt-get install nginx -y', pty=True, watchers=[sudopass])
+    # c.run('sudo usermod -aG www-data chen', pty=True, watchers=[sudopass])
+    # c.run('sudo systemctl enable nginx', pty=True, watchers=[sudopass])
+    # #c.run('sudo mkdir /var/www/', pty=True, watchers=[sudopass]) # Huawei
+    # c.run('sudo chown chen:chen /var/www/ -R', pty=True, watchers=[sudopass])
+    c.run('sudo apt-get install nginx -y', pty=True)
+    # c.run('sudo usermod -aG www-data chen', pty=True)
+    # c.run('sudo systemctl enable nginx', pty=True)
+    # c.run('sudo chown chen:chen /var/www/ -R', pty=True)
 
 
 @cli.command()
@@ -282,6 +311,7 @@ cli.add_command(install_docker)
 cli.add_command(install_git)
 cli.add_command(set_ufw)
 cli.add_command(install_certbot)
+cli.add_command(install_nginx)
 
 if __name__ == '__main__':
     cli()
